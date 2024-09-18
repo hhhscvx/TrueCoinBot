@@ -118,6 +118,25 @@ class TrueCoin:
             'user_spins': resp_json['user']['currentSpins']
         }
 
+    async def earn_partner_task(self, task_id: int) -> bool:
+        resp = await self.session.post('https://api.true.world/api/partners/earnPartnerTask',
+                                       json={'taskId': task_id})
+        resp_json = await resp.json()
+
+        # TODO: Надо наверное все в try except обернуть, чтоб не вылезало ошибок типо status нет в resp_json
+        return resp_json['status'] == True
+
+    async def get_partner_tasks(self):
+        """Проходиться по каждому, и которые active = true, вызывать earn_partner_task"""
+        resp = await self.session.get('https://api.true.world/api/partners/getPartnersGroupsOfTasks')
+        resp_json = await resp.json()
+
+        # for partner in resp_json: # такую обходку в starter`е замутить
+        #     for task in partner['tasks']:
+        #         if task['active'] == True:
+        #             self.earn_partner_task(task_id=task['id'])
+        return resp_json
+
     async def get_tg_web_data(self):
         try:
             await self.tg_client.connect()
