@@ -9,7 +9,6 @@ from utils.core.telegram import Accounts
 
 
 async def main():
-    """TODO: Надо ща создать сессию и вызвать TrueCoin.get_tg_web_data и посмотреть, что приходит в урлы (ЕСЛИ ТАМ ЕСТЬ AUTH-KEY - ПОБЕДА)"""
     if not os.path.exists('sessions'):
         os.mkdir('sessions')
 
@@ -26,7 +25,7 @@ async def main():
     accounts = await Accounts().get_accounts()
 
     for account in accounts:
-        session_name, phone_number, proxy = account.values()
+        session_name, phone_number, _ = account.values()
         client = Client(
             name=session_name,
             api_id=config.API_ID,
@@ -35,7 +34,9 @@ async def main():
             workdir=config.WORKDIR
         )
         truecoin = TrueCoin(tg_client=client)
-        await truecoin.get_tg_web_data()
+        await truecoin.login()
+        await truecoin.get_wall_tasks()
+        await truecoin.logout()
 
 
 if __name__ == "__main__":

@@ -61,8 +61,62 @@ class TrueCoin:
         resp = await self.session.post(url='https://api.true.world/api/auth/signIn',
                                        json=json_data)
         resp_json = await resp.json()
+        user = resp_json['user']
+        logger.success(
+            f"{self.session_name} | Successfully sign in! Coins: {user['coins']}; Spins: {user['currentSpins']}")
         self.session.headers['Authorization'] = 'Bearer ' + resp_json['token']
         return True
+
+    async def collect_daily_reward(self) -> dict[str, int]:
+        resp = await self.session.get('https://api.true.world/api/dailyReward/collectReward')
+        resp_json = await resp.json()
+
+        return {
+            'coins': resp_json['user']['coins'],
+            'day': resp_json['reward']['rewardId']  # какой день клэйма подряд
+        }
+
+    async def get_wall_tasks(self) -> list[dict]:
+        resp = await self.session.get('https://api.true.world/api/ad/getWallFeed')
+        resp_json = await resp.json()
+        return resp_json
+
+    async def complete_wall_task(self, task_id: int) -> str:
+        resp = await self.session.get(f'https://api.true.world/api/ad/getWallClick/{task_id}')
+        resp_json = await resp.json()
+
+        return resp_json  # OK
+
+    async def roll(self) -> tuple[str]:
+        await asyncio.sleep(random.uniform(*config.DELAY_BETWEEN_ROLL))
+
+        resp = await self.session.get('https://api.true.world/api/game/roll')
+        resp_json = await resp.json()
+
+        # if resp_json['user']['currentSpins'] < 5:
+        #     await asyncio.sleep(random.uniform(*config.DELAY_BY_FEW_SPINS_LEFT))
+        # А не, эту темку в starter`е реализую, не зря же currentSpins отдаю
+
+        result = resp_json['result']
+        winType = result['winType']
+        match winType:
+            case 'coins':
+                coins = result['coins']
+                spins = 0
+            case 'spins':
+                spins = result['spins']
+                coins = 0
+            case _:
+                coins, spins = 0, 0
+
+        return {
+            'slots': result['slots'],  # какие карты выпали (в лог выведу)
+            'winType': winType,  # исходя из winType буду логировать coins`ы или spins`ы
+            'coins': coins,
+            'spins': spins,
+            'user_coins': resp_json['user']['coins'],
+            'user_spins': resp_json['user']['currentSpins']
+        }
 
     async def get_tg_web_data(self):
         try:
@@ -86,31 +140,6 @@ class TrueCoin:
             auth_date = query.split('&auth_date=')[1].split('&hash=')[0]
             hash_ = query.split('&hash=')[1]
 
-            query = f"query_id={query_id}&user={user}&auth_date={auth_date}&hash={hash_}"
-
             return f"query_id={query_id}&user={user}&auth_date={auth_date}&hash={hash_}"
-        except Exception as err:
-            raise err  # for debug
-            return None
-
-    async def roll(self) -> tuple[str]:
-        resp = await self.session.get('https://api.true.world/api/game/roll')
-        resp_json = await resp.json()
-
-        result = resp_json['result']
-        slots = result['slots']
-        loose = result['loose']
-        winType = result['winType']
-
-        return slots, loose, winType
-
-    async def get_wall_tasks(self) -> list[dict]:
-        resp = await self.session.get('https://api.true.world/api/ad/getWallFeed')
-        resp_json = await resp.json()
-        return resp_json
-
-    async def complete_wall_task(self, task_id: int) -> str:
-        resp = await self.session.get(f'https://api.true.world/api/ad/getWallClick/{task_id}')
-        resp_json = await resp.json()
-
-        return resp_json()  # OK
+        except:
+            return

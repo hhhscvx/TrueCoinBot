@@ -9,7 +9,8 @@ class Settings(BaseSettings):
     API_KEY: str
 
     DELAY_CONN_ACCOUNT: list = [5, 15]
-    DELAY_BEFORE_CLAIM: list = [5, 15]
+    DELAY_BETWEEN_ROLL: list = [0.5, 1.75]
+    DELAY_BY_FEW_SPINS_LEFT: list = [1800, 2400]
 
     USE_PROXY_FROM_FILE: bool = False  # True - if use proxy from file, False - if use proxy from accounts.json
     PROXY_PATH: str = "data/proxy.txt"
