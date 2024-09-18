@@ -14,7 +14,7 @@ class Accounts:
         self.api_hash = config.API_HASH
 
     @staticmethod
-    def get_available_accounts(sessions: list):
+    def get_available_accounts(sessions: list[str]):
         accounts_from_json = load_from_json('sessions/accounts.json')
 
         if not accounts_from_json:
@@ -23,13 +23,13 @@ class Accounts:
         available_accounts = []
         for session in sessions:
             for saved_account in accounts_from_json:
-                if saved_account['session_name'] == session:
+                if saved_account['session_name'] == session.replace('.session', ''):
                     available_accounts.append(saved_account)
                     break
 
         return available_accounts
 
-    def parse_sessions(self) -> list:
+    def parse_sessions(self) -> list[str]:
         sessions = []
         for file in os.listdir(self.workdir):
             if file.endswith('.session'):
@@ -39,7 +39,7 @@ class Accounts:
         return sessions
 
     async def check_valid_account(self, account: dict) -> dict | None:
-        session_name, phone_number, proxy = account.values()
+        session_name, _, proxy = account.values()
 
         try:
             proxy_dict = {
@@ -58,15 +58,15 @@ class Accounts:
                 proxy=proxy_dict
             )
 
-            connect = asyncio.wait_for(fut=client.connect(), timeout=config.TIMEOUT)
+            connect = await asyncio.wait_for(client.connect(), timeout=config.TIMEOUT)
             if connect:
                 await client.get_me()
                 await client.disconnect()
                 return account
             await client.disconnect()
 
-        except:
-            pass
+        except Exception as err:
+            raise err
 
     async def check_valid_accounts(self, accounts: list) -> tuple[list]:
         logger.info(f"Checking accounts for valid...")
@@ -85,7 +85,7 @@ class Accounts:
 
         return valid_accounts, invalid_accounts
 
-    async def get_accounts(self) -> list:
+    async def get_accounts(self) -> list[dict]:
         sessions = self.parse_sessions()
         available_accounts = self.get_available_accounts(sessions)
 
@@ -94,7 +94,7 @@ class Accounts:
         else:
             logger.success(f"Search available accounts: {len(available_accounts)}")
 
-        valid_accounts, invalid_accounts = self.check_valid_accounts(available_accounts)
+        valid_accounts, invalid_accounts = await self.check_valid_accounts(available_accounts)
 
         if invalid_accounts:
             save_accounts_to_file(path=f"{self.workdir}invalid_accounts.txt", accounts=invalid_accounts)
@@ -104,7 +104,7 @@ class Accounts:
             raise ValueError("Haven`t valid sessions!")
         return valid_accounts
 
-    async def create_session(self):
+    async def create_sessions(self):
         while True:
             session_name = input('\nInput the name of the session (press Enter to exit): ')
             if not session_name:
