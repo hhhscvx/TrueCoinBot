@@ -22,7 +22,7 @@ def save_to_json(path: str, new_data: dict) -> None:
         json.dump(data, json_file, ensure_ascii=False, indent=2)
 
 
-def save_list_to_file(path: str, sessions: list) -> None:
+def save_accounts_to_file(path: str, accounts: list) -> None:
     with open(path, 'w', encoding='utf-8') as file:
-        for item in sessions:
+        for item in accounts:
             file.write(f"{item['session_name']}.session\n")

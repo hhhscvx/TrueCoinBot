@@ -22,4 +22,4 @@ class Settings(BaseSettings):
     TIMEOUT: int = 30
 
 
-settings = Settings()
+config = Settings()
