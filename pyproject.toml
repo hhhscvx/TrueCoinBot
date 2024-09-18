@@ -9,6 +9,8 @@ python = "^3.11"
 python-dotenv = "^1.0.1"
 pydantic-settings = "^2.5.2"
 loguru = "^0.7.2"
+Pyrogram = "^2.0.106"
+TgCrypto = "^1.2.5"
 
 [tool.poetry.dev-dependencies]
 
