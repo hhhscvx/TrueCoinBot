@@ -1,5 +1,4 @@
 import asyncio
-import json
 from pprint import pprint
 import random
 from urllib.parse import quote, unquote
@@ -43,6 +42,7 @@ class TrueCoin:
     async def login(self):
         await asyncio.sleep(random.uniform(*config.DELAY_CONN_ACCOUNT))
         query = await self.get_tg_web_data()
+        print(query)
 
         if query is None:
             logger.error(f"{self.session_name} | Session {self.session_name}.session invalid")
@@ -57,15 +57,23 @@ class TrueCoin:
             "tgVersion": "7.10",
             "userId": self.client_tg_id
         }
+        pprint(json_data)
         self.session.headers['Auth-Key'] = config.API_KEY
         resp = await self.session.post(url='https://api.true.world/api/auth/signIn',
                                        json=json_data)
         resp_json = await resp.json()
+        pprint(resp_json)
         user = resp_json['user']
         logger.success(
             f"{self.session_name} | Successfully sign in! Coins: {user['coins']}; Spins: {user['currentSpins']}")
         self.session.headers['Authorization'] = 'Bearer ' + resp_json['token']
         return True
+
+    async def user_stats(self):
+        resp = await self.session.get('https://api.true.world/api/game/getUserAchives')
+        resp_json = await resp.json()
+
+        return resp_json['user'] if resp.status == 200 else None
 
     async def collect_daily_reward(self) -> dict[str, int]:
         resp = await self.session.get('https://api.true.world/api/dailyReward/collectReward')
@@ -73,8 +81,8 @@ class TrueCoin:
 
         return {
             'coins': resp_json['user']['coins'],
-            'day': resp_json['reward']['rewardId']  # какой день клэйма подряд
-        }
+            'day': resp_json['reward']['rewardId']
+        } if resp.status == 200 else None
 
     async def get_wall_tasks(self) -> list[dict]:
         resp = await self.session.get('https://api.true.world/api/ad/getWallFeed')
@@ -95,7 +103,6 @@ class TrueCoin:
 
         # if resp_json['user']['currentSpins'] < 5:
         #     await asyncio.sleep(random.uniform(*config.DELAY_BY_FEW_SPINS_LEFT))
-        # А не, эту темку в starter`е реализую, не зря же currentSpins отдаю
 
         result = resp_json['result']
         winType = result['winType']
@@ -123,8 +130,12 @@ class TrueCoin:
                                        json={'taskId': task_id})
         resp_json = await resp.json()
 
-        # TODO: Надо наверное все в try except обернуть, чтоб не вылезало ошибок типо status нет в resp_json
-        return resp_json['status'] == True
+        try:
+            earned = resp_json['status'] == True
+        except:
+            earned = False
+
+        return earned
 
     async def get_partner_tasks(self):
         """Проходиться по каждому, и которые active = true, вызывать earn_partner_task"""
@@ -160,5 +171,6 @@ class TrueCoin:
             hash_ = query.split('&hash=')[1]
 
             return f"query_id={query_id}&user={user}&auth_date={auth_date}&hash={hash_}"
-        except:
+        except Exception as err:
+            raise err
             return
