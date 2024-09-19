@@ -1,6 +1,5 @@
 
 import asyncio
-from pprint import pprint
 import random
 
 from pyrogram import Client
@@ -30,17 +29,17 @@ async def start(tg_client: Client, proxy: str | None = None):
                     await asyncio.sleep(2)
 
                 partner_tasks = await truecoin.get_partner_tasks()
-                pprint(partner_tasks)
                 await asyncio.sleep(1)
                 for partner in partner_tasks:
                     for task in partner['tasks']:
-                        pprint(task)
                         if task['active'] is True:
                             is_completed = await truecoin.earn_partner_task(task_id=task['id'])
                             if is_completed:
                                 logger.success(
                                     f"{session_name} | Completed task by {partner['name']}; Earned: «{task['content']}»")
-                                await asyncio.sleep(random.uniform(0.8, 1.25))
+                                sleep_time = random.uniform(0.8, 1.25)
+                                await asyncio.sleep(sleep_time)
+                                logger.info(f"{session_name} | Sleep {sleep_time} seconds...")
 
                 wall_tasks = await truecoin.get_wall_tasks()
                 for task in wall_tasks:
@@ -53,11 +52,13 @@ async def start(tg_client: Client, proxy: str | None = None):
                     roll = await truecoin.roll()
                     win_type = roll['winType']
                     earned = f"{roll['coins']} coins" if win_type == 'coins' else f"{roll['spins']} spins"
-                    logger.success(f"{session_name} | Successfully spinned! Slots: {roll['slots']} | Win type: {win_type} "
-                                   f"+{earned} | "
-                                   f"Balance: {roll['user_coins']} coins | {roll['user_spins']} spins")
+                    logger.success(f"{session_name} | Spinned! Slots: {roll['slots']} | Win type: {win_type} "
+                                   f"+{earned} | " if win_type == 'coins' or win_type == 'spins' else ''
+                                   f"Balance: {roll['user_coins']} coins | {roll['user_spins']} spins left")
                     if roll['user_spins'] < 5:
-                        await asyncio.sleep(random.uniform(*config.DELAY_BY_FEW_SPINS_LEFT))
+                        sleep_time = random.uniform(*config.DELAY_BY_FEW_SPINS_LEFT)
+                        logger.info(f"{session_name} | Sleep {sleep_time} seconds...")
+                        await asyncio.sleep(sleep_time)
                         break
 
             except Exception as err:

@@ -1,5 +1,4 @@
 import asyncio
-from pprint import pprint
 import random
 from urllib.parse import quote, unquote
 
@@ -42,7 +41,6 @@ class TrueCoin:
     async def login(self):
         await asyncio.sleep(random.uniform(*config.DELAY_CONN_ACCOUNT))
         query = await self.get_tg_web_data()
-        print(query)
 
         if query is None:
             logger.error(f"{self.session_name} | Session {self.session_name}.session invalid")
@@ -57,12 +55,10 @@ class TrueCoin:
             "tgVersion": "7.10",
             "userId": self.client_tg_id
         }
-        pprint(json_data)
         self.session.headers['Auth-Key'] = config.API_KEY
         resp = await self.session.post(url='https://api.true.world/api/auth/signIn',
                                        json=json_data)
         resp_json = await resp.json()
-        pprint(resp_json)
         user = resp_json['user']
         logger.success(
             f"{self.session_name} | Successfully sign in! Coins: {user['coins']}; Spins: {user['currentSpins']}")
