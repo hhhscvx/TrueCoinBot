@@ -97,9 +97,6 @@ class TrueCoin:
         resp = await self.session.get('https://api.true.world/api/game/roll')
         resp_json = await resp.json()
 
-        # if resp_json['user']['currentSpins'] < 5:
-        #     await asyncio.sleep(random.uniform(*config.DELAY_BY_FEW_SPINS_LEFT))
-
         result = resp_json['result']
         winType = result['winType']
         match winType:
@@ -113,8 +110,7 @@ class TrueCoin:
                 coins, spins = 0, 0
 
         return {
-            'slots': result['slots'],  # какие карты выпали (в лог выведу)
-            'winType': winType,  # исходя из winType буду логировать coins`ы или spins`ы
+            'winType': winType,
             'coins': coins,
             'spins': spins,
             'user_coins': resp_json['user']['coins'],
@@ -134,14 +130,9 @@ class TrueCoin:
         return earned
 
     async def get_partner_tasks(self):
-        """Проходиться по каждому, и которые active = true, вызывать earn_partner_task"""
         resp = await self.session.get('https://api.true.world/api/partners/getPartnersGroupsOfTasks')
         resp_json = await resp.json()
 
-        # for partner in resp_json: # такую обходку в starter`е замутить
-        #     for task in partner['tasks']:
-        #         if task['active'] == True:
-        #             self.earn_partner_task(task_id=task['id'])
         return resp_json
 
     async def get_tg_web_data(self):
@@ -168,5 +159,4 @@ class TrueCoin:
 
             return f"query_id={query_id}&user={user}&auth_date={auth_date}&hash={hash_}"
         except Exception as err:
-            raise err
             return

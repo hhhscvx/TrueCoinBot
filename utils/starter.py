@@ -52,8 +52,8 @@ async def start(tg_client: Client, proxy: str | None = None):
                     roll = await truecoin.roll()
                     win_type = roll['winType']
                     earned = f"{roll['coins']} coins" if win_type == 'coins' else f"{roll['spins']} spins"
-                    logger.success(f"{session_name} | Spinned! Slots: {roll['slots']} | Win type: {win_type} "
-                                   f"+{earned} | " if win_type == 'coins' or win_type == 'spins' else ''
+                    plus_earned = f"+{earned} |" if win_type == 'coins' or win_type == 'spins' else 'loose |'
+                    logger.success(f"{session_name} | Spinned! {plus_earned} "
                                    f"Balance: {roll['user_coins']} coins | {roll['user_spins']} spins left")
                     if roll['user_spins'] < 5:
                         sleep_time = random.uniform(*config.DELAY_BY_FEW_SPINS_LEFT)
