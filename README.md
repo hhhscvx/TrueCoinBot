@@ -21,5 +21,8 @@ API_KEY=your_api_key
 4. `poetry init`
 5. `poetry install`
 
+### Start bot 🤖:
+`python3 main.py`
+
 ### Python Version 🐍
 Preferably python 3.10+
