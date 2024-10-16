@@ -6,7 +6,6 @@ class Settings(BaseSettings):
 
     API_ID: int
     API_HASH: str
-    API_KEY: str
 
     DELAY_CONN_ACCOUNT: list = [5, 15]
     DELAY_BETWEEN_ROLL: list = [0.5, 1.75]

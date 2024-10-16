@@ -30,8 +30,7 @@ class TrueCoin:
             }
 
         headers = {
-            "User-Agent": UserAgent(os='android').random,
-            "Auth-Key": config.API_KEY
+            "User-Agent": UserAgent(os='android').random
         }
         self.session = aiohttp.ClientSession(headers=headers, trust_env=True, connector=connector)
 
@@ -47,15 +46,16 @@ class TrueCoin:
             await self.logout()
             return
 
-        self.client_tg_id = unquote(query).split('user={"id":', maxsplit=1)[1].split(',"first_name"', maxsplit=1)[0]
+        self.client_tg_id = int(unquote(query).split('user={"id":', maxsplit=1)[1].split(',"first_name"', maxsplit=1)[0])
 
         json_data = {
             "lang": "en",
             "tgPlatform": "android",
             "tgVersion": "7.10",
+            "tgWebAppStartParam": None,
             "userId": self.client_tg_id
         }
-        self.session.headers['Auth-Key'] = config.API_KEY
+        self.session.headers["Query"] = query
         resp = await self.session.post(url='https://api.true.world/api/auth/signIn',
                                        json=json_data)
         resp_json = await resp.json()
